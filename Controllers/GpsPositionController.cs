@@ -4,6 +4,7 @@ using TrackingApi.Models;
 namespace TrackingApi.Controllers;
 
 [ApiController]
+[Route("api/v1/devices/{devId}/positions")]
 public class GpsPositionController : ControllerBase
 {
     private readonly ILogger<GpsPositionController> _logger;
@@ -15,21 +16,22 @@ public class GpsPositionController : ControllerBase
         _dataRepository = dataRepository;
     }
 
-    [Route("api/v1/devices/{devId}/positions")]
     [HttpGet]
     public async Task<ActionResult> GetGpsPositions([FromRoute] int devId, [FromQuery] TimeRangeRequestModel timeRange)
     {
         var dbPos = await _dataRepository.GetGpsPositions(devId, timeRange.From?.UtcDateTime, timeRange.To?.UtcDateTime, 1000, 0);
-        var dtoPos = dbPos.Select(p => new GpsPositionDtoOut
-        {
-            Latitude = p.Latitude / 10000000d,
-            Longitude = p.Longitude / 10000000d,
-            Altitude = p.Altitude,
-            Heading = p.Heading,
-            Speed = p.Speed,
-            Timestamp = p.TimestampUtc
-        });
+        var dtoPos = dbPos.Select(p => p.AsDtoOut());
 
         return Ok(new DataResponse<IEnumerable<GpsPositionDtoOut>> { Data = dtoPos });
+    }
+
+    [Route("latest")]
+    [HttpGet]
+    public async Task<ActionResult> GetLatestGpsPosition([FromRoute] int devId)
+    {
+        var dbPos = (await _dataRepository.GetGpsPositions(devId, null, null, 1, 0)).First();
+        var dtoPos =  dbPos.AsDtoOut();
+
+        return Ok(new DataResponse<GpsPositionDtoOut> { Data = dtoPos });
     }
 }

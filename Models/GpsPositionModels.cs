@@ -19,3 +19,19 @@ public class GpsPositionDbOut
     public short Speed { get; set; }
     public DateTime TimestampUtc { get; set; }
 }
+
+public static class GpsPositionExtensions
+{
+    public static GpsPositionDtoOut AsDtoOut(this GpsPositionDbOut gpsPositionDbOut)
+    {
+        return new()
+        {
+            Latitude = gpsPositionDbOut.Latitude / 10000000d,
+            Longitude = gpsPositionDbOut.Longitude / 10000000d,
+            Altitude = gpsPositionDbOut.Altitude,
+            Heading = gpsPositionDbOut.Heading,
+            Speed = gpsPositionDbOut.Speed,
+            Timestamp = gpsPositionDbOut.TimestampUtc
+        };
+    }
+}
